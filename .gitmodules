@@ -1,0 +1,3 @@
+[submodule "ffi/libpropcalc"]
+	path = ffi/libpropcalc
+	url = https://github.com/taboege/libpropcalc

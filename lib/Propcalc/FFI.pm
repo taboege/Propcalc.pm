@@ -41,47 +41,43 @@ $ffi->mangler(sub {
 # General
 #
 
-$ffi->attach(version => [] => 'unsigned int',
-    sub { shift->() },
-);
+$ffi->attach(version => [] => 'unsigned int');
 
 #
 # Formula
 #
 
-$ffi->attach(formula_new => ['string'] => 'opaque',
-    sub {
-        my $sub = shift;
-        $sub->(@_)
+$ffi->custom_type(propform_t => {
+    native_type    => 'opaque',
+    native_to_perl => sub {
+        my $class = 'Propcalc::Formula';
+        bless \$_[0], $class
     },
-);
+    perl_to_native => sub {
+        ${$_[0]}
+    },
+});
 
-$ffi->attach(formula_rpn => ['opaque'] => 'opaque',
-    sub {
-        my $sub = shift;
-        my $ptr = $sub->(@_);
-        my $str = $ffi->cast('opaque' => 'string', $ptr);
-        free $ptr;
-        $str
-    },
-);
+$ffi->attach(formula_new => ['string'] => 'propform_t');
+$ffi->attach(formula_destroy => ['propform_t'] => 'void');
 
-$ffi->attach(formula_pn => ['opaque'] => 'opaque',
-    sub {
-        my $sub = shift;
-        my $ptr = $sub->(@_);
-        my $str = $ffi->cast('opaque' => 'string', $ptr);
-        free $ptr;
-        $str
-    },
-);
+sub make_string {
+    my $sub = shift;
+    my $ptr = $sub->(@_);
+    my $str = $ffi->cast('opaque' => 'string', $ptr);
+    free $ptr;
+    $str
+}
 
-$ffi->attach(formula_destroy => ['opaque'] => 'void',
-    sub {
-        my $sub = shift;
-        $sub->(@_)
-    },
-);
+$ffi->attach(formula_rpn => ['propform_t'] => 'opaque', \&make_string);
+$ffi->attach(formula_pn  => ['propform_t'] => 'opaque', \&make_string);
+
+$ffi->attach(formula_neg  => ['propform_t']               => 'propform_t');
+$ffi->attach(formula_and  => ['propform_t', 'propform_t'] => 'propform_t');
+$ffi->attach(formula_or   => ['propform_t', 'propform_t'] => 'propform_t');
+$ffi->attach(formula_impl => ['propform_t', 'propform_t'] => 'propform_t');
+$ffi->attach(formula_eqv  => ['propform_t', 'propform_t'] => 'propform_t');
+$ffi->attach(formula_xor  => ['propform_t', 'propform_t'] => 'propform_t');
 
 =head1 AUTHOR
 

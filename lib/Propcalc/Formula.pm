@@ -79,6 +79,48 @@ sage-compatible, are preferred.
 
 =cut
 
+=head2 Overloaded operators
+
+The following operators are overloaded for C<Propcalc::Formula>:
+
+=over
+
+=item C<~$f>: negation of C<$f>
+
+=item C<$f & $g>: conjunction of C<$f> and C<$g>
+
+=item C<$f | $g>: disjunction of C<$f> and C<$g>
+
+=item C<<< $f >> $g >>>: implication of C<$f> to C<$g>
+
+=item C<< $f <=> $g >>: equivalence of C<$f> and C<$g>
+
+=item C<$f ^ $g>: contravalence of C<$f> and C<$g>
+
+=back
+
+TODO: Stringification (infix), Boolification (SAT),
+Numification (#SAT), Iterating (AllSAT). All of them
+naïvely truth-table based.
+
+=cut
+
+use overload
+    '~'   => \&_neg,
+    '&'   => \&_and,
+    '|'   => \&_or,
+    '>>'  => \&_impl,
+    '<=>' => \&_eqv,
+    '^'   => \&_xor,
+;
+
+sub _neg  { Propcalc::FFI::formula_neg  @_ }
+sub _and  { Propcalc::FFI::formula_and  @_ }
+sub _or   { Propcalc::FFI::formula_or   @_ }
+sub _impl { Propcalc::FFI::formula_impl @_ }
+sub _eqv  { Propcalc::FFI::formula_eqv  @_ }
+sub _xor  { Propcalc::FFI::formula_xor  @_ }
+
 =head2 new
 
     my $fm = Propcalc::Formula->new($infix);
@@ -88,11 +130,7 @@ expression. For the syntax, see L<above|/Formula syntax>.
 
 =cut
 
-sub new {
-    my ($class, $infix) = @_;
-    my $fm = Propcalc::FFI::formula_new $infix;
-    bless [$fm], $class
-}
+sub new { Propcalc::FFI::formula_new $_[1] }
 
 =head2 rpn
 
@@ -102,9 +140,7 @@ Renders the formula in Reverse Polish Notation.
 
 =cut
 
-sub rpn {
-    Propcalc::FFI::formula_rpn shift->[0]
-}
+sub rpn { Propcalc::FFI::formula_rpn $_[0] }
 
 =head2 pn
 
@@ -114,13 +150,9 @@ Renders the formula in Polish Notation.
 
 =cut
 
-sub pn {
-    Propcalc::FFI::formula_pn shift->[0]
-}
+sub pn { Propcalc::FFI::formula_pn $_[0] }
 
-sub DESTROY {
-    Propcalc::FFI::formula_destroy shift->[0]
-}
+sub DESTROY { Propcalc::FFI::formula_destroy $_[0] }
 
 =head1 AUTHOR
 
